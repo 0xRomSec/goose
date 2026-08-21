@@ -300,7 +300,6 @@ impl ProviderRegistry {
             config_keys,
             setup_steps: config.setup_steps.clone(),
             model_selection_hint: None,
-            fast_model: config.fast_model.clone(),
             setup: config.setup.clone(),
             deprecated: None,
         };
@@ -398,7 +397,6 @@ mod tests {
             skip_canonical_filtering: false,
             model_doc_link: None,
             setup_steps: vec![],
-            fast_model: None,
             preserves_thinking: false,
             emit_clear_thinking: false,
             setup: None,

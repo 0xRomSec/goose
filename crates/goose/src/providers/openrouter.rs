@@ -22,7 +22,6 @@ use rmcp::model::Tool;
 pub const OPENROUTER_PROVIDER_NAME: &str = "openrouter";
 const OPENROUTER_PARAMETERS_CONFIG_KEY: &str = "OPENROUTER_PARAMETERS";
 pub const OPENROUTER_DEFAULT_MODEL: &str = "anthropic/claude-sonnet-4";
-pub const OPENROUTER_DEFAULT_FAST_MODEL: &str = "google/gemini-2.5-flash";
 
 // OpenRouter can run many models, we suggest the default
 pub const OPENROUTER_KNOWN_MODELS: &[&str] = &[
@@ -433,7 +432,6 @@ impl goose_providers::base::ProviderDescriptor for OpenRouterProvider {
             "Click 'Create' or use an existing API key",
             "Copy the key and paste it above",
         ])
-        .with_fast_model(OPENROUTER_DEFAULT_FAST_MODEL)
     }
 }
 

@@ -44,10 +44,6 @@ pub struct ProviderMetadata {
     /// Hint shown in the model picker when this provider manages its own model selection.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub model_selection_hint: Option<String>,
-    /// The name of a fast/cheap model to use for lightweight tasks (e.g. session naming,
-    /// compaction). When set, fast-path callers prefer this model over the main model.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub fast_model: Option<String>,
     /// Setup information exposed to clients.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub setup: Option<ProviderSetupMetadata>,
@@ -84,7 +80,6 @@ impl ProviderMetadata {
             config_keys,
             setup_steps: vec![],
             model_selection_hint: None,
-            fast_model: None,
             setup: None,
             deprecated: None,
         }
@@ -109,7 +104,6 @@ impl ProviderMetadata {
             config_keys,
             setup_steps: vec![],
             model_selection_hint: None,
-            fast_model: None,
             setup: None,
             deprecated: None,
         }
@@ -126,7 +120,6 @@ impl ProviderMetadata {
             config_keys: vec![],
             setup_steps: vec![],
             model_selection_hint: None,
-            fast_model: None,
             setup: None,
             deprecated: None,
         }
@@ -139,11 +132,6 @@ impl ProviderMetadata {
 
     pub fn with_model_selection_hint(mut self, hint: &str) -> Self {
         self.model_selection_hint = Some(hint.to_string());
-        self
-    }
-
-    pub fn with_fast_model(mut self, fast_model: &str) -> Self {
-        self.fast_model = Some(fast_model.to_string());
         self
     }
 
