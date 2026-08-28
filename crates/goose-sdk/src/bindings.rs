@@ -766,7 +766,7 @@ impl Provider {
         }
         if matches!(
             name.as_str(),
-            "openai" | "anthropic" | "databricks" | "databricks_v2"
+            "openai" | "anthropic" | "databricks" | "databricks_v2" | "google"
         ) {
             features.push(Feature::Documents);
         }
