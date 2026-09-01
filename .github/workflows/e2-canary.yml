@@ -74,7 +74,7 @@ jobs:
           # stub envsubst: only $ISSUE_NUMBER substitution needed
           cat > /usr/local/bin/envsubst <<'SH'
           #!/bin/sh
-          python3 -c "import sys;print(sys.stdin.read().replace('\$ISSUE_NUMBER','${ISSUE_NUMBER}'))"
+          sed "s/\$ISSUE_NUMBER/${ISSUE_NUMBER}/g"
           SH
           chmod +x /usr/local/bin/envsubst
           echo "$GOOSE_RECIPE" | envsubst '$ISSUE_NUMBER' > /tmp/recipe.yaml
