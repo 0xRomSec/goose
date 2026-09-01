@@ -83,6 +83,7 @@ jobs:
           ISSUE_NUMBER: ${{ inputs.issue_number }}
         run: |
           # Start stub IN THIS STEP (backgrounded procs from earlier steps don't survive)
+          export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
           setsid python3 /tmp/stub.py > /tmp/stub2.log 2>&1 < /dev/null &
           STUB_PID=$!
           sleep 1
