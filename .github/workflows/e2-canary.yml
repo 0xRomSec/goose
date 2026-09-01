@@ -59,6 +59,9 @@ jobs:
                       body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
                   except Exception:
                       body = {}
+                  if self.path == "/diag":
+                      self.wfile.write(b"ok")
+                      return
                   CALLS["n"] += 1
                   if CALLS["n"] == 1:
                       content = "I will write the canary marker."
@@ -105,7 +108,7 @@ jobs:
           setsid /usr/bin/python3 /tmp/stub.py > /tmp/stub2.log 2>&1 < /dev/null &
           STUB_PID=$!
           sleep 2
-          curl -s -m 5 -X POST http://127.0.0.1:11434/api/chat -d '{}' | head -c 60; echo " <- stub re-verified"
+          curl -s -m 5 -X POST http://127.0.0.1:11434/diag -d '{}' | head -c 40; echo " <- stub re-verified"
           mkdir -p $HOME/.config/goose $HOME/.local/share/goose
           export PATH="$PATH:/usr/local/bin"
           # stub envsubst: only $ISSUE_NUMBER substitution needed
@@ -123,7 +126,7 @@ jobs:
           echo "=== STUB LOG ==="
           cat /tmp/stub2.log 2>/dev/null | tail -20
           echo "=== STUB ALIVE? ==="
-          curl -s -m 3 -X POST http://127.0.0.1:11434/api/chat -d '{}' | head -c 80; echo
+          curl -s -m 3 -X POST http://127.0.0.1:11434/diag -d '{}' | head -c 40; echo
 
       - name: Control cell — same rig WITH GOOSE_MODE=approve
         if: always()
