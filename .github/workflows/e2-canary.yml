@@ -32,7 +32,7 @@ jobs:
       env:
         GOOSE_PROVIDER: ollama
         GOOSE_MODEL: canary-stub
-        OLLAMA_HOST: localhost
+        OLLAMA_HOST: 127.0.0.1
         HOME: /tmp/goose-home
     steps:
       - name: Start Ollama-compatible stub provider (localhost:11434)
