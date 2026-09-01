@@ -70,6 +70,13 @@ jobs:
           ISSUE_NUMBER: ${{ inputs.issue_number }}
         run: |
           mkdir -p $HOME/.config/goose $HOME/.local/share/goose
+          export PATH="$PATH:/usr/local/bin"
+          # stub envsubst: only $ISSUE_NUMBER substitution needed
+          cat > /usr/local/bin/envsubst <<'SH'
+          #!/bin/sh
+          python3 -c "import sys;print(sys.stdin.read().replace('\$ISSUE_NUMBER','${ISSUE_NUMBER}'))"
+          SH
+          chmod +x /usr/local/bin/envsubst
           echo "$GOOSE_RECIPE" | envsubst '$ISSUE_NUMBER' > /tmp/recipe.yaml
           goose run --recipe /tmp/recipe.yaml 2>&1 | tee /tmp/goose-run.log
           echo "=== MARKER CHECK ==="
