@@ -73,6 +73,11 @@ jobs:
         env:
           ISSUE_NUMBER: ${{ inputs.issue_number }}
         run: |
+          # Start stub IN THIS STEP (backgrounded procs from earlier steps don't survive)
+          python3 /tmp/stub.py > /tmp/stub2.log 2>&1 &
+          STUB_PID=$!
+          sleep 1
+          curl -s -X POST http://127.0.0.1:11434/api/chat -d '{}' | head -c 60; echo " <- stub re-verified"
           mkdir -p $HOME/.config/goose $HOME/.local/share/goose
           export PATH="$PATH:/usr/local/bin"
           # stub envsubst: only $ISSUE_NUMBER substitution needed
