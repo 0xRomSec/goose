@@ -83,7 +83,7 @@ jobs:
           ISSUE_NUMBER: ${{ inputs.issue_number }}
         run: |
           # Start stub IN THIS STEP (backgrounded procs from earlier steps don't survive)
-          python3 /tmp/stub.py > /tmp/stub2.log 2>&1 &
+          setsid python3 /tmp/stub.py > /tmp/stub2.log 2>&1 < /dev/null &
           STUB_PID=$!
           sleep 1
           curl -s -X POST http://127.0.0.1:11434/api/chat -d '{}' | head -c 60; echo " <- stub re-verified"
@@ -101,6 +101,10 @@ jobs:
           if [ -f /tmp/canary-marker ]; then echo "CANARY-MARKER-EXISTS: $(cat /tmp/canary-marker)"; else echo "NO MARKER"; fi
           echo "=== GOOSE_MODE FROM INSIDE JOB ==="
           env | grep -E "^GOOSE_MODE" || echo "GOOSE_MODE UNSET (stock default applies)"
+          echo "=== STUB LOG ==="
+          cat /tmp/stub2.log 2>/dev/null | tail -20
+          echo "=== STUB ALIVE? ==="
+          curl -s -m 3 -X POST http://127.0.0.1:11434/api/chat -d '{}' | head -c 80; echo
 
       - name: Control cell — same rig WITH GOOSE_MODE=approve
         if: always()
