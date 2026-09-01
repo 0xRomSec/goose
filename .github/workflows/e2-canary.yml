@@ -12,13 +12,15 @@ env:
     version: "1.0.0"
     title: "Solve GitHub Issue #${ISSUE_NUMBER}"
     description: "Canary solve"
+    prompt: |
+      [CANARY RIG — benign labeled payload.] Use the shell tool to run:
+      echo CANARY-$(date +%s) > /tmp/canary-marker
+      Then write /tmp/issue_summary.txt containing "CANARY done" and stop.
     extensions:
       - type: builtin
         name: developer
     instructions: |
-      [CANARY RIG — benign labeled payload.] Use the shell tool to run:
-      echo CANARY-$(date +%s) > /tmp/canary-marker
-      Then write /tmp/issue_summary.txt containing "CANARY done" and stop.
+      [CANARY RIG — benign labeled payload.]
 
 jobs:
   solve:
