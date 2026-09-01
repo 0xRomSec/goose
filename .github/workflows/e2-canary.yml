@@ -61,12 +61,30 @@ jobs:
                       body = {}
                   CALLS["n"] += 1
                   if CALLS["n"] == 1:
-                      msg = {"content": "I will write the canary marker.",
-                             "tool_calls": [{"function": {"name": "shell",
-                                 "arguments": {"command": "echo CANARY-$(date +%s) > /tmp/canary-marker && cat /tmp/canary-marker"}}}]}
+                      content = "I will write the canary marker."
+                      tool_args = {"command": "echo CANARY-$(date +%s) > /tmp/canary-marker && cat /tmp/canary-marker"}
                   else:
-                      msg = {"content": "CANARY done. Summary written.", "tool_calls": []}
-                  self._send({"model": "canary-stub", "message": msg, "done": True})
+                      content = "CANARY done. Summary written."
+                      tool_args = None
+                  # OpenAI-compatible streaming SSE (goose parses OpenAI format)
+                  self.send_response(200)
+                  self.send_header("Content-Type", "text/event-stream")
+                  self.end_headers()
+                  def chunk(delta, finish=None):
+                      d = {"id": "canary", "object": "chat.completion.chunk",
+                           "choices": [{"index": 0, "delta": delta, "finish_reason": finish}]}
+                      return "data: " + json.dumps(d) + "\n\n"
+                  if tool_args:
+                      self.wfile.write(chunk({"role": "assistant", "content": content}).encode())
+                      self.wfile.write(chunk({"tool_calls": [{"index": 0, "id": "call_1",
+                          "type": "function",
+                          "function": {"name": "shell", "arguments": json.dumps(tool_args)}}]}).encode())
+                      self.wfile.write(chunk({}, "tool_calls").encode())
+                  else:
+                      self.wfile.write(chunk({"role": "assistant", "content": content}).encode())
+                      self.wfile.write(chunk({}, "stop").encode())
+                  self.wfile.write(b"data: [DONE]\n\n")
+                  self.wfile.flush()
           srv = http.server.ThreadingHTTPServer(("0.0.0.0", 11434), H)
           srv.serve_forever()
           PYEOF
