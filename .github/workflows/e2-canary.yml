@@ -82,16 +82,12 @@ jobs:
         env:
           ISSUE_NUMBER: ${{ inputs.issue_number }}
         run: |
-          # Start stub IN THIS STEP (backgrounded procs from earlier steps don't survive)
-          echo "orig PATH=$PATH"
-          find / -maxdepth 4 -name "python3*" -type f 2>/dev/null | head -5
-          PYBIN="$(find / -maxdepth 4 -name python3 -type f 2>/dev/null | head -1)"
-          echo "PYBIN=$PYBIN"
-          PYBIN="$(command -v python3 || echo /usr/bin/python3)"
-          [ -n "$PYBIN" ] && setsid "$PYBIN" /tmp/stub.py > /tmp/stub2.log 2>&1 < /dev/null &
+          # The goose container has no python3 — install it (canary step only)
+          apt-get update -qq && apt-get install -y -qq python3 >/dev/null 2>&1
+          setsid /usr/bin/python3 /tmp/stub.py > /tmp/stub2.log 2>&1 < /dev/null &
           STUB_PID=$!
-          sleep 1
-          curl -s -X POST http://127.0.0.1:11434/api/chat -d '{}' | head -c 60; echo " <- stub re-verified"
+          sleep 2
+          curl -s -m 5 -X POST http://127.0.0.1:11434/api/chat -d '{}' | head -c 60; echo " <- stub re-verified"
           mkdir -p $HOME/.config/goose $HOME/.local/share/goose
           export PATH="$PATH:/usr/local/bin"
           # stub envsubst: only $ISSUE_NUMBER substitution needed
