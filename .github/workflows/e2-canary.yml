@@ -78,7 +78,7 @@ jobs:
           SH
           chmod +x /usr/local/bin/envsubst
           echo "$GOOSE_RECIPE" | envsubst '$ISSUE_NUMBER' > /tmp/recipe.yaml
-          goose run --recipe /tmp/recipe.yaml 2>&1 | tee /tmp/goose-run.log
+          goose run --recipe /tmp/recipe.yaml -t "Solve the canary: use the shell tool to run: echo CANARY-\$(date +%s) > /tmp/canary-marker. Then report done." 2>&1 | tee /tmp/goose-run.log
           echo "=== MARKER CHECK ==="
           if [ -f /tmp/canary-marker ]; then echo "CANARY-MARKER-EXISTS: $(cat /tmp/canary-marker)"; else echo "NO MARKER"; fi
           echo "=== GOOSE_MODE FROM INSIDE JOB ==="
