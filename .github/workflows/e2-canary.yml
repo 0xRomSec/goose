@@ -83,10 +83,12 @@ jobs:
           ISSUE_NUMBER: ${{ inputs.issue_number }}
         run: |
           # Start stub IN THIS STEP (backgrounded procs from earlier steps don't survive)
-          export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-          echo "python3 at: $(command -v python3 || echo NONE)"; ls -la /usr/bin/python3 /usr/local/bin/python3 2>/dev/null || true
+          echo "orig PATH=$PATH"
+          find / -maxdepth 4 -name "python3*" -type f 2>/dev/null | head -5
+          PYBIN="$(find / -maxdepth 4 -name python3 -type f 2>/dev/null | head -1)"
+          echo "PYBIN=$PYBIN"
           PYBIN="$(command -v python3 || echo /usr/bin/python3)"
-          setsid "$PYBIN" /tmp/stub.py > /tmp/stub2.log 2>&1 < /dev/null &
+          [ -n "$PYBIN" ] && setsid "$PYBIN" /tmp/stub.py > /tmp/stub2.log 2>&1 < /dev/null &
           STUB_PID=$!
           sleep 1
           curl -s -X POST http://127.0.0.1:11434/api/chat -d '{}' | head -c 60; echo " <- stub re-verified"
