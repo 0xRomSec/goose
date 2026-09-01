@@ -84,7 +84,9 @@ jobs:
         run: |
           # Start stub IN THIS STEP (backgrounded procs from earlier steps don't survive)
           export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-          setsid python3 /tmp/stub.py > /tmp/stub2.log 2>&1 < /dev/null &
+          echo "python3 at: $(command -v python3 || echo NONE)"; ls -la /usr/bin/python3 /usr/local/bin/python3 2>/dev/null || true
+          PYBIN="$(command -v python3 || echo /usr/bin/python3)"
+          setsid "$PYBIN" /tmp/stub.py > /tmp/stub2.log 2>&1 < /dev/null &
           STUB_PID=$!
           sleep 1
           curl -s -X POST http://127.0.0.1:11434/api/chat -d '{}' | head -c 60; echo " <- stub re-verified"
