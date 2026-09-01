@@ -1,0 +1,87 @@
+name: E2 canary — goose Issue Solver (fork, stubbed provider)
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        required: true
+        type: string
+
+env:
+  GOOSE_RECIPE: |
+    version: "1.0.0"
+    title: "Solve GitHub Issue #${ISSUE_NUMBER}"
+    description: "Canary solve"
+    extensions:
+      - type: builtin
+        name: developer
+    instructions: |
+      Solve the issue. [CANARY RIG — all payloads benign, labeled CANARY.]
+
+jobs:
+  solve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: ghcr.io/aaif-goose/goose:latest
+      options: --user root
+      env:
+        GOOSE_PROVIDER: ollama
+        GOOSE_MODEL: canary-stub
+        OLLAMA_HOST: localhost
+        HOME: /tmp/goose-home
+    steps:
+      - name: Start Ollama-compatible stub provider (localhost:11434)
+        run: |
+          # Minimal Ollama chat API: returns one tool call to write the CANARY
+          # marker file, then stops. Payload is fixed and benign.
+          cat > /tmp/stub.py <<'PYEOF'
+          import json, http.server
+          CALLS = {"n": 0}
+          class H(http.server.BaseHTTPRequestHandler):
+              def log_message(self, *a): pass
+              def do_POST(self):
+                  body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                  CALLS["n"] += 1
+                  if CALLS["n"] == 1:
+                      msg = {"content": "I will write the canary marker.",
+                             "tool_calls": [{"function": {"name": "shell",
+                                 "arguments": {"command": "echo CANARY-$(date +%s) > /tmp/canary-marker && cat /tmp/canary-marker"}}}]}
+                  else:
+                      msg = {"content": "CANARY done. Summary written.", "tool_calls": []}
+                  out = json.dumps({"model": "canary-stub",
+                                    "message": msg, "done": True}).encode()
+                  self.send_response(200)
+                  self.send_header("Content-Type", "application/json")
+                  self.end_headers()
+                  self.wfile.write(out)
+          http.server.HTTPServer(("127.0.0.1", 11434), H).serve_forever()
+          PYEOF
+          nohup python3 /tmp/stub.py > /tmp/stub.log 2>&1 &
+          sleep 1
+          curl -s -X POST http://127.0.0.1:11434/api/chat -d '{}' | head -c 120
+          echo " <- stub alive"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run goose (GOOSE_MODE intentionally UNSET = stock default)
+        env:
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+        run: |
+          mkdir -p $HOME/.config/goose $HOME/.local/share/goose
+          echo "$GOOSE_RECIPE" | envsubst '$ISSUE_NUMBER' > /tmp/recipe.yaml
+          goose run --recipe /tmp/recipe.yaml 2>&1 | tee /tmp/goose-run.log
+          echo "=== MARKER CHECK ==="
+          if [ -f /tmp/canary-marker ]; then echo "CANARY-MARKER-EXISTS: $(cat /tmp/canary-marker)"; else echo "NO MARKER"; fi
+          echo "=== GOOSE_MODE FROM INSIDE JOB ==="
+          env | grep -E "^GOOSE_MODE" || echo "GOOSE_MODE UNSET (stock default applies)"
+
+      - name: Control cell — same rig WITH GOOSE_MODE=approve
+        if: always()
+        run: |
+          rm -f /tmp/canary-marker
+          rm -rf $HOME/.local/share/goose/sessions
+          GOOSE_MODE=approve goose run --recipe /tmp/recipe.yaml 2>&1 | tail -20 || true
+          echo "=== CONTROL MARKER CHECK ==="
+          if [ -f /tmp/canary-marker ]; then echo "CONTROL-MARKER-EXISTS (unexpected)"; else echo "CONTROL-NO-MARKER (approval gate held)"; fi
